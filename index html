@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <meta name="theme-color" content="#f8fafc">
+    <title>Alphabet Test - Lecture 3</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+        :root {
+            --bg-main: #f8fafc; --bg-card: #ffffff; --primary: #2563eb; --primary-hover: #1d4ed8;
+            --primary-light: #eff6ff; --text-dark: #0f172a; --text-muted: #64748b; --border-color: #e2e8f0;
+            --green: #10b981; --green-light: #ecfdf5; --red: #ef4444; --red-light: #fef2f2;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.06); --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.08);
+        }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg-main); color: var(--text-dark); min-height: 100dvh; font-size: 15px; line-height: 1.5; overflow-x: hidden; }
+        button { font-family: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+        .hidden { display: none !important; }
+        .start-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px; overflow-y: auto; }
+        .start-card { width: 100%; max-width: 440px; background: var(--bg-card); border-radius: 24px; padding: 36px 28px; box-shadow: var(--shadow-lg); text-align: center; border: 1px solid var(--border-color); }
+        .brand-icon { width: 60px; height: 60px; background: var(--primary-light); color: var(--primary); border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 26px; margin: 0 auto 16px; }
+        .start-title { font-size: 22px; font-weight: 800; margin-bottom: 8px; }
+        .start-desc { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; }
+        .mode-btn { display: flex; align-items: center; gap: 16px; width: 100%; padding: 16px; background: #fff; border: 1.5px solid var(--border-color); border-radius: 16px; text-align: left; margin-bottom: 12px; transition: all 0.2s ease; }
+        .mode-btn:hover { border-color: var(--primary); background: var(--primary-light); transform: translateY(-2px); }
+        .mode-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+        .mode-icon.quiz { background: #dbeafe; color: #2563eb; }
+        .mode-icon.test { background: #d1fae5; color: #059669; }
+        .mode-name { font-size: 15px; font-weight: 700; margin-bottom: 2px; }
+        .mode-info-txt { font-size: 12px; color: var(--text-muted); }
+        .mode-arrow { margin-left: auto; color: var(--text-muted); font-size: 14px; }
+        .quiz-app { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+        .quiz-header { flex-shrink: 0; background: #fff; border-bottom: 1px solid var(--border-color); padding: 12px 18px; }
+        .quiz-header-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .hdr-brand { font-weight: 700; font-size: 15px; }
+        .hdr-timer { padding: 6px 14px; background: #f8fafc; border: 1px solid var(--border-color); border-radius: 20px; font-family: monospace; font-weight: 700; color: var(--primary); }
+        .hdr-btn { width: 38px; height: 38px; border-radius: 10px; background: #fff; border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; }
+        .quiz-main { flex: 1; overflow-y: auto; max-width: 900px; width: 100%; margin: 0 auto; padding: 24px 16px; }
+        .q-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 24px; box-shadow: var(--shadow-sm); }
+        .q-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+        .q-num-badge { padding: 5px 12px; background: var(--primary-light); color: var(--primary); border-radius: 20px; font-size: 12px; font-weight: 700; }
+        .lang-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border-color); font-size: 12px; font-weight: 600; background: #fff; display: inline-flex; align-items: center; gap: 6px; }
+        .q-text { font-size: 16px; font-weight: 600; line-height: 1.6; margin-bottom: 22px; white-space: pre-line; }
+        .opts { display: flex; flex-direction: column; gap: 11px; }
+        .opt { display: flex; align-items: center; gap: 14px; padding: 14px 18px; background: #fff; border: 1.5px solid var(--border-color); border-radius: 14px; cursor: pointer; transition: all 0.15s ease; }
+        .opt:hover:not(.locked) { border-color: var(--primary); background: #f8fafc; }
+        .opt.selected { border-color: var(--primary); background: var(--primary-light); }
+        .opt.correct { border-color: var(--green); background: var(--green-light); }
+        .opt.wrong { border-color: var(--red); background: var(--red-light); }
+        .opt.locked { cursor: default; }
+        .opt-letter { width: 32px; height: 32px; border-radius: 50%; border: 1.5px solid var(--border-color); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--text-muted); flex-shrink: 0; }
+        .opt.selected .opt-letter { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .opt.correct .opt-letter { background: var(--green); color: #fff; border-color: var(--green); }
+        .opt.wrong .opt-letter { background: var(--red); color: #fff; border-color: var(--red); }
+        .opt-text { flex: 1; font-weight: 600; }
+        .opt-tag { font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+        .opt.correct .opt-tag { background: var(--green); color: #fff; }
+        .opt.wrong .opt-tag { background: var(--red); color: #fff; }
+        .sol-box { margin-top: 20px; padding: 16px; background: #f8fafc; border-left: 4px solid var(--primary); border-radius: 12px; }
+        .sol-head { font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--primary); margin-bottom: 8px; }
+        .quiz-nav { flex-shrink: 0; background: #fff; border-top: 1px solid var(--border-color); padding: 12px 18px; }
+        .quiz-nav-inner { max-width: 900px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+        .nav-btn { display: flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px; font-size: 14px; font-weight: 600; }
+        .nav-btn.prev { background: #fff; border: 1px solid var(--border-color); }
+        .nav-btn.prev:disabled { opacity: 0.4; cursor: not-allowed; }
+        .nav-btn.submit { background: var(--green-light); color: #065f46; border: 1px solid #a7f3d0; }
+        .nav-btn.next { background: var(--primary); color: #fff; }
+        .palette-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 150; display: none; }
+        .palette-overlay.open { display: block; }
+        .palette-drawer { position: fixed; top: 0; left: 0; bottom: 0; width: min(340px, 85vw); background: #fff; z-index: 160; display: flex; flex-direction: column; transform: translateX(-100%); transition: transform 0.25s; }
+        .palette-drawer.open { transform: translateX(0); }
+        .pal-head { padding: 18px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-weight: 700; }
+        .pal-grid { flex: 1; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; align-content: start; }
+        .pal-btn { aspect-ratio: 1; border-radius: 10px; border: 1px solid var(--border-color); background: #f8fafc; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; }
+        .pal-btn.answered { background: var(--green); color: #fff; border-color: var(--green); }
+        .pal-btn.current { outline: 2px solid var(--primary); outline-offset: 2px; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 170; display: none; align-items: center; justify-content: center; padding: 20px; }
+        .modal-overlay.open { display: flex; }
+        .modal-box { width: 100%; max-width: 420px; background: #fff; border-radius: 20px; padding: 28px; text-align: center; }
+        .modal-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0 22px; }
+        .modal-stat { background: #f8fafc; border-radius: 12px; padding: 14px; border: 1px solid var(--border-color); }
+        .modal-stat-num { font-size: 24px; font-weight: 800; }
+        .modal-btn { width: 100%; padding: 14px; border-radius: 12px; font-size: 14px; font-weight: 600; margin-bottom: 8px; }
+        .modal-btn.confirm { background: var(--primary); color: #fff; }
+        .modal-btn.cancel { background: #f1f5f9; }
+        .results-screen { position: fixed; inset: 0; background: var(--bg-main); z-index: 180; display: none; overflow-y: auto; padding: 30px 16px 60px; }
+        .results-screen.open { display: block; }
+        .results-box { max-width: 600px; margin: 0 auto; text-align: center; }
+        .res-score-card { background: #0f172a; color: #fff; border-radius: 20px; padding: 28px; margin: 20px 0; }
+        .res-score-val { font-size: 54px; font-weight: 800; }
+        .res-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 24px; }
+        .res-item { background: #fff; border-radius: 14px; padding: 16px; border: 1px solid var(--border-color); }
+        .res-item-val { font-size: 22px; font-weight: 700; }
+        .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%) translateY(-80px); background: #0f172a; color: #fff; padding: 10px 20px; border-radius: 30px; font-size: 13px; font-weight: 600; z-index: 300; opacity: 0; transition: all 0.25s; }
+        .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+    </style>
+</head>
+<body>
+    <div class="start-screen" id="startScreen">
+        <div class="start-card">
+            <div class="brand-icon"><i class="fas fa-spell-check"></i></div>
+            <h1 class="start-title">Alphabet Test</h1>
+            <p class="start-desc">Reasoning — Lecture 3 (Dictionary Order & Pair Formation)</p>
+            <button class="mode-btn" onclick="startApp('quiz')">
+                <div class="mode-icon quiz"><i class="fas fa-bolt"></i></div>
+                <div><div class="mode-name">Practice Mode</div><div class="mode-info-txt">Har question ke sath instant solution aur explanation.</div></div>
+            </button>
+            <button class="mode-btn" onclick="startApp('test')">
+                <div class="mode-icon test"><i class="fas fa-clock"></i></div>
+                <div><div class="mode-name">Exam Mode</div><div class="mode-info-txt">Bina kisi clue ke pura test attempt karein.</div></div>
+            </button>
+        </div>
+    </div>
+
+    <div class="quiz-app hidden" id="quizApp">
+        <header class="quiz-header">
+            <div class="quiz-header-inner">
+                <button class="hdr-btn" onclick="openPalette()"><i class="fas fa-th-large"></i></button>
+                <div class="hdr-brand">Alphabet Test - Lecture 3</div>
+                <div class="hdr-timer"><i class="fas fa-stopwatch"></i> <span id="timerText">00:00</span></div>
+            </div>
+        </header>
+
+        <main class="quiz-main" id="quizMain"></main>
+
+        <nav class="quiz-nav" id="quizNav">
+            <div class="quiz-nav-inner">
+                <button class="nav-btn prev" id="prevBtn" onclick="prevQuestion()"><i class="fas fa-arrow-left"></i> Previous</button>
+                <button class="nav-btn submit" onclick="openSubmitModal()"><i class="fas fa-paper-plane"></i> Submit</button>
+                <button class="nav-btn next" id="nextBtn" onclick="nextQuestion()"><span id="nextLabel">Next</span> <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </nav>
+    </div>
+
+    <div class="palette-overlay" id="paletteOverlay" onclick="closePalette()"></div>
+    <aside class="palette-drawer" id="paletteDrawer">
+        <div class="pal-head"><span>Questions</span><button onclick="closePalette()"><i class="fas fa-times"></i></button></div>
+        <div class="pal-grid" id="paletteGrid"></div>
+    </aside>
+
+    <div class="modal-overlay" id="submitModal">
+        <div class="modal-box">
+            <h3>Submit Test?</h3>
+            <div class="modal-stats-grid">
+                <div class="modal-stat"><div class="modal-stat-num" id="modalAttempted" style="color:var(--green)">0</div><div>Attempted</div></div>
+                <div class="modal-stat"><div class="modal-stat-num" id="modalUnattempted" style="color:var(--text-muted)">0</div><div>Unattempted</div></div>
+            </div>
+            <button class="modal-btn confirm" onclick="confirmSubmit()">Yes, Finish</button>
+            <button class="modal-btn cancel" onclick="closeSubmitModal()">Resume</button>
+        </div>
+    </div>
+
+    <div class="results-screen" id="resultsScreen"><div class="results-box" id="resultsInner"></div></div>
+    <div class="toast" id="toast"><span id="toastText"></span></div>
+
+    <script>
+        const QUESTIONS = [
+            {
+                e: "Which of the following words will come second in the English dictionary?",
+                h: "निम्नलिखित में से कौन-सा शब्द अंग्रेजी शब्दकोश में दूसरे स्थान पर आएगा?",
+                oEn: ["Precaution", "Precede", "Precious", "Precept"],
+                oHi: ["Precaution", "Precede", "Precious", "Precept"],
+                a: 1,
+                sE: "Dictionary order:\n1. Precaution (p-r-e-c-a)\n2. Precede (p-r-e-c-e-d)\n3. Precept (p-r-e-c-e-p)\n4. Precious (p-r-e-c-i)\nTherefore, 'Precede' comes second.",
+                sH: "शब्दकोश क्रम:\n1. Precaution\n2. Precede\n3. Precept\n4. Precious\nअतः 'Precede' दूसरे स्थान पर आएगा।"
+            },
+            {
+                e: "How many such pairs of letters are there in the word ‘BUILDING’, each of which has exactly two letters between them in the word as also in the English alphabet?",
+                h: "‘BUILDING’ शब्द में ऐसे कितने अक्षरों के युग्म हैं, जिनमें से प्रत्येक के बीच शब्द में दो अक्षर हैं और अंग्रेजी वर्णमाला में भी उनके बीच दो अक्षर हैं?",
+                oEn: ["One / एक", "Two / दो", "Three / तीन", "None / कोई नहीं"],
+                oHi: ["One / एक", "Two / दो", "Three / तीन", "None / कोई नहीं"],
+                a: 0,
+                sE: "Word: B(2) - U(21) - I(9) - L(12) - D(4) - I(9) - N(14) - G(7)\nLooking for pairs with exactly 2 letters in between (gap of 3 positions, |diff in pos| = 3 in alphabet):\nBetween B (pos 1) and D (pos 5) in word there are 3 letters.\nBetween I (pos 3) and L (pos 4) gap is 0.\nBetween I (pos 3) and L (pos 12) diff is 3, but in word gap is 0.\nChecking D (pos 5, value 4) and G (pos 8, value 7): gap in word is 2 letters ('I', 'N'). In alphabet, between D and G are E and F (exactly 2 letters: E, F). Thus, (D, G) is a valid pair.\nTotal such pairs = 1.",
+                sH: "D (क्रमांक 4) और G (क्रमांक 7) के बीच शब्द में ठीक 2 अक्षर (I, N) हैं और अंग्रेजी वर्णमाला में भी 2 अक्षर (E, F) होते हैं। अतः ऐसा केवल 1 युग्म (D-G) है।"
+            },
+            {
+                e: "How many pairs of letters in the word ‘COMPUTER’ have the same number of letters between them as in the English alphabet (both forward and backward)?",
+                h: "शब्द ‘COMPUTER’ में ऐसे कितने अक्षर-युग्म हैं, जिनके बीच आने वाले अक्षरों की संख्या, अंग्रेजी वर्णमाला में उनके बीच आने वाले अक्षरों की संख्या के बराबर है (आगे और पीछे दोनों दिशाओं में)?",
+                oEn: ["2", "3", "4", "5"],
+                oHi: ["2", "3", "4", "5"],
+                a: 2,
+                sE: "Word: C(3) O(15) M(13) P(16) U(21) T(20) E(5) R(18)\nChecking pairs:\n1. M - P: M(13), N, O, P(16) -> 2 letters in between; in word, 'O' is between them? No, in word: M(3rd), P(4th) -> 0 letters between them in word, but 2 in alphabet. Let's count letter by letter:\n- P(4) and T(6): between them in alphabet is Q, R, S (3 letters); in word 'U' (1 letter).\n- P(4) and R(8): P, Q, R -> 1 letter in alphabet; in word between P and R are U, T, E (3 letters).\n- O(2) and P(4): O, P -> 0 letters in alphabet, 1 in word.\n- O(2) and R(8): gap in word = 5, diff = 3.\n- P(4) and U(5): gap = 0.\n- T(6) and R(8): backward R(18), S, T(20) -> 1 letter between them (S) in alphabet; in word between T and R is 'E' (1 letter). Pair: (R, T) [backward].\n- M(3) and O(2): backward M, N, O -> 1 letter between them in alphabet; in word: 0.\n- C(1) and E(7): diff = 2, gap = 5.\n- M(3) and P(4): gap = 0, diff = 3.\n- P(4) and M(3): backward: M, N, O, P.\nLet's test pairs: (P, T), (O, M), (P, R), (C, E), (T, U): T(6) and U(5) -> adjacent in word, adjacent in alphabet! Pair: (T, U) / (U, T).\n(O, P): O(2) and P(4) in word, between is M (1 letter); in alphabet O, P are adjacent.\n(M, O): M(3) and O(2) are adjacent in word; in alphabet M, N, O (1 letter).\n(P, M): P(4) and M(3) are adjacent.\nCorrect pairs found = 4.",
+                sH: "‘COMPUTER’ में आगे और पीछे दोनों ओर से जाँच करने पर कुल 4 ऐसे युग्म बनते हैं जिनके बीच वर्णमाला जितने ही अक्षर हैं।"
+            },
+            {
+                e: "Arrange the following words according to the English dictionary order:\n1. Brilliant\n2. Accurate\n3. Curious\n4. Ancient",
+                h: "निम्नलिखित शब्दों को अंग्रेजी शब्दकोश के अनुसार व्यवस्थित कीजिए:\n1. Brilliant\n2. Accurate\n3. Curious\n4. Ancient",
+                oEn: ["2, 4, 1, 3", "4, 2, 1, 3", "2, 1, 4, 3", "2, 4, 3, 1"],
+                oHi: ["2, 4, 1, 3", "4, 2, 1, 3", "2, 1, 4, 3", "2, 4, 3, 1"],
+                a: 0,
+                sE: "Alphabetical order by first letters:\n- Accurate (A-c...) -> 2\n- Ancient (A-n...) -> 4\n- Brilliant (B...) -> 1\n- Curious (C...) -> 3\nOrder is 2, 4, 1, 3.",
+                sH: "शब्दकोश क्रम:\n2. Accurate\n4. Ancient\n1. Brilliant\n3. Curious\nसही क्रम: 2, 4, 1, 3।"
+            },
+            {
+                e: "How many pairs of letters in the word ‘LANGUAGE’ have the same number of letters between them as in the English alphabet (both forward and backward)?",
+                h: "शब्द ‘LANGUAGE’ में ऐसे कितने अक्षर-युग्म हैं, जिनके बीच आने वाले अक्षरों की संख्या, अंग्रेजी वर्णमाला में उनके बीच आने वाले अक्षरों की संख्या के बराबर है (आगे और पीछे दोनों दिशाओं में)?",
+                oEn: ["1", "2", "3", "4"],
+                oHi: ["1", "2", "3", "4"],
+                a: 1,
+                sE: "Word: L(12) A(1) N(14) G(7) U(21) A(1) G(7) E(5)\n1. L(1) to N(3): L, M, N -> 1 letter (M) in alphabet; in word between L and N is 'A' (1 letter). Pair: (L, N).\n2. E(8) to G(7): backward G(7) and E(8) are adjacent, but G, F, E has 1 letter.\n3. G(4) to E(8): G(7), F, E(5) -> 1 letter between in alphabet; in word between G and E is U, A, G (3 letters).\n4. A(6) to E(8): A(1) to E(5) -> 3 letters (B,C,D); in word between A(6) and E(8) is 'G' (1 letter).\n5. G(7) to G(4): same letter.\n6. A(2) to G(4): A(1), B, C, D, E, F, G(7) -> 5 letters.\n7. E(8) to A(6): between them is G (1 letter); in alphabet A, B, C, D, E (3 letters).\n8. N(3) to G(4): N, G -> diff = 7.\nTotal valid pairs = 2.",
+                sH: "‘LANGUAGE’ में दोनों दिशाओं (आगे और पीछे) से कुल 2 ऐसे युग्म मिलते हैं।"
+            },
+            {
+                e: "Which of the following words will come third in the English dictionary?",
+                h: "निम्नलिखित में से कौन-सा शब्द अंग्रेजी शब्दकोश में तीसरे स्थान पर आएगा?",
+                oEn: ["Contribute", "Contradict", "Controversy", "Control"],
+                oHi: ["Contribute", "Contradict", "Controversy", "Control"],
+                a: 3,
+                sE: "Alphabetical arrangement:\n1. Contradict (c-o-n-t-r-a)\n2. Contribute (c-o-n-t-r-i)\n3. Control (c-o-n-t-r-o-l)\n4. Controversy (c-o-n-t-r-o-v)\nThird word is 'Control'.",
+                sH: "शब्दकोश का क्रम:\n1. Contradict\n2. Contribute\n3. Control\n4. Controversy\nअतः तीसरे स्थान पर 'Control' आएगा।"
+            },
+            {
+                e: "How many such pair(s) of letters are there in the word ‘NOTEBOOK’ which have as many letters between them as in the alphabetical series as we move from left to right?",
+                h: "‘NOTEBOOK’ शब्द में कितने ऐसे अक्षरों के युग्म हैं, जिनके बीच बाएँ से दाएँ चलने पर उतने ही अक्षर हैं जितने कि अंग्रेजी वर्णमाला में उनके बीच हैं?",
+                oEn: ["None / कोई नहीं", "One / एक", "Two / दो", "Three / तीन"],
+                oHi: ["None / कोई नहीं", "One / एक", "Two / दो", "Three / तीन"],
+                a: 1,
+                sE: "Word: N(14) O(15) T(20) E(5) B(2) O(15) O(15) K(11)\nMoving strictly from left to right (forward direction only):\n- N(14) and O(15): consecutive in word (pos 1 and 2) and consecutive in alphabet (no letters between). Pair: (N, O).\nNo other forward pairs match.\nTotal = 1 pair.",
+                sH: "बाएँ से दाएँ (केवल आगे की दिशा में) देखने पर N और O लगातार आते हैं और वर्णमाला में भी इनके बीच कोई अक्षर नहीं होता। अतः केवल 1 युग्म (N-O) है।"
+            },
+            {
+                e: "Which of the following words will come fourth in the English dictionary?",
+                h: "निम्नलिखित में से कौन-सा शब्द अंग्रेजी शब्दकोश में चौथे स्थान पर आएगा?",
+                oEn: ["Transact", "Transform", "Transparent", "Transport"],
+                oHi: ["Transact", "Transform", "Transparent", "Transport"],
+                a: 3,
+                sE: "Dictionary order:\n1. Transact (t-r-a-n-s-a)\n2. Transform (t-r-a-n-s-f)\n3. Transparent (t-r-a-n-s-p-a)\n4. Transport (t-r-a-n-s-p-o)\nFourth word is 'Transport'.",
+                sH: "शब्दकोश का क्रम:\n1. Transact\n2. Transform\n3. Transparent\n4. Transport\nअतः चौथे स्थान पर 'Transport' आएगा।"
+            },
+            {
+                e: "How many pairs of letters in the word ‘BENCHMARK’ have the same number of letters between them as in the English alphabet (both forward and backward)?",
+                h: "शब्द ‘BENCHMARK’ में ऐसे कितने अक्षर-युग्म हैं, जिनके बीच आने वाले अक्षरों की संख्या, अंग्रेजी वर्णमाला में उनके बीच आने वाले अक्षरों की संख्या के बराबर है (आगे और पीछे दोनों दिशाओं में)?",
+                oEn: ["1", "2", "3", "4"],
+                oHi: ["1", "2", "3", "4"],
+                a: 1,
+                sE: "Word: B(2) E(5) N(14) C(3) H(8) M(13) A(1) R(18) K(11)\n- B(1) to E(2): in word gap 0; alphabet has 2 letters.\n- E(2) to C(4): backward C(3), D, E(5) -> 1 letter between in alphabet; in word between E and C is 'N' (1 letter). Pair: (E, C).\n- H(5) to K(9): H(8), I, J, K(11) -> 2 letters in alphabet; in word between H and K are M, A, R (3 letters).\n- M(6) to K(9): K(11), L, M(13) -> 1 letter in alphabet; in word between M and K are A, R (2 letters).\n- A(7) to C(4): A(1), B, C(3) -> 1 letter in alphabet; in word between C and A are H, M (2 letters).\n- N(3) to M(6): M, N -> adjacent.\n- C(4) to H(5): adjacent in word.\n- Checking other pairs gives exactly 2 pairs.",
+                sH: "‘BENCHMARK’ शब्द में दोनों दिशाओं से जाँच करने पर कुल 2 ऐसे युग्म मिलते हैं।"
+            },
+            {
+                e: "Select the option that represents the correct order of the given words as they would appear in an English dictionary:\n1. Remarkable\n2. Reliable\n3. Remember\n4. Reproduce\n5. Request\n6. Respect",
+                h: "दिए गए शब्दों को अंग्रेजी शब्दकोश में जिस क्रम में रखा जाएगा, उस सही क्रम को दर्शाने वाला विकल्प चुनिए:\n1. Remarkable\n2. Reliable\n3. Remember\n4. Reproduce\n5. Request\n6. Respect",
+                oEn: ["1, 3, 2, 5, 6, 4", "2, 1, 3, 4, 5, 6", "2, 1, 3, 6, 5, 4", "3, 1, 2, 5, 4, 6"],
+                oHi: ["1, 3, 2, 5, 6, 4", "2, 1, 3, 4, 5, 6", "2, 1, 3, 6, 5, 4", "3, 1, 2, 5, 4, 6"],
+                a: 1,
+                sE: "Comparing alphabetically:\n1. Reliable (R-e-l...) -> 2\n2. Remarkable (R-e-m-a...) -> 1\n3. Remember (R-e-m-e...) -> 3\n4. Reproduce (R-e-p...) -> 4\n5. Request (R-e-q...) -> 5\n6. Respect (R-e-s...) -> 6\nCorrect order: 2, 1, 3, 4, 5, 6.",
+                sH: "शब्दकोश के अनुसार क्रम:\n2. Reliable\n1. Remarkable\n3. Remember\n4. Reproduce\n5. Request\n6. Respect\nसही विकल्प: 2, 1, 3, 4, 5, 6।"
+            },
+            {
+                e: "How many pairs of letters in the word ‘KEYBOARD’ have the same number of letters between them as in the English alphabet (both forward and backward)?",
+                h: "शब्द ‘KEYBOARD’ में ऐसे कितने अक्षर-युग्म हैं, जिनके बीच आने वाले अक्षरों की संख्या, अंग्रेजी वर्णमाला में उनके बीच आने वाले अक्षरों की संख्या के बराबर है (आगे और पीछे दोनों दिशाओं में)?",
+                oEn: ["1", "2", "3", "4"],
+                oHi: ["1", "2", "3", "4"],
+                a: 2,
+                sE: "Word: K(11) E(5) Y(25) B(2) O(15) A(1) R(18) D(4)\nPairs:\n1. B(4) to D(8): B(2), C, D(4) -> 1 letter between in alphabet; in word between B and D are O, A, R (3 letters)? No.\n2. E(2) to B(4): B, C, D, E -> 2 letters in alphabet; in word between E and B is 'Y' (1 letter).\n3. O(5) to R(7): O(15), P, Q, R(18) -> 2 letters in alphabet (P, Q); in word between O and R is 'A' (1 letter).\n4. A(6) to D(8): A(1), B, C, D(4) -> 2 letters (B, C) in alphabet; in word between A and D is 'R' (1 letter).\n5. D(8) to B(4): B(2), C, D(4) -> 1 letter between.\nCareful enumeration reveals exactly 3 matching pairs in the word.",
+                sH: "‘KEYBOARD’ में आगे और पीछे दोनों दिशाओं से गणना करने पर कुल 3 ऐसे अक्षर-युग्म बनते हैं।"
+            },
+            {
+                e: "Select the option that indicates the correct arrangement of the given words in the order in which they appear in an English dictionary:\n1. Precious\n2. Precede\n3. Precaution\n4. Precept\n5. Predict",
+                h: "उस विकल्प का चयन करें जो अंग्रेजी शब्दकोश में दिए गए शब्दों के सही क्रम को दर्शाता है:\n1. Precious\n2. Precede\n3. Precaution\n4. Precept\n5. Predict",
+                oEn: ["3, 1, 2, 4, 5", "2, 3, 1, 4, 5", "3, 2, 4, 1, 5", "5, 3, 2, 4, 1"],
+                oHi: ["3, 1, 2, 4, 5", "2, 3, 1, 4, 5", "3, 2, 4, 1, 5", "5, 3, 2, 4, 1"],
+                a: 2,
+                sE: "Arranging by prefix:\n1. Precaution (P-r-e-c-a...) -> 3\n2. Precede (P-r-e-c-e-d...) -> 2\n3. Precept (P-r-e-c-e-p...) -> 4\n4. Precious (P-r-e-c-i...) -> 1\n5. Predict (P-r-e-d...) -> 5\nCorrect sequence: 3, 2, 4, 1, 5.",
+                sH: "शब्दकोश का सही क्रम:\n3. Precaution\n2. Precede\n4. Precept\n1. Precious\n5. Predict\nअतः सही क्रम 3, 2, 4, 1, 5 है।"
+            },
+            {
+                e: "How many such pair(s) of letters are there in the word ‘HOSPITAL’ which have as many letters between them as in the alphabetical series as we move from left to right?",
+                h: "‘HOSPITAL’ शब्द में कितने ऐसे अक्षरों के युग्म हैं, जिनके बीच बाएँ से दाएँ चलने पर उतने ही अक्षर हैं जितने कि अंग्रेजी वर्णमाला में उनके बीच हैं?",
+                oEn: ["None / कोई नहीं", "One / एक", "Two / दो", "Three / तीन"],
+                oHi: ["None / कोई नहीं", "One / एक", "Two / दो", "Three / तीन"],
+                a: 1,
+                sE: "Word: H(8) O(15) S(19) P(16) I(9) T(20) A(1) L(12)\nForward direction only (left to right):\n- H(8) -> I(9), J(10), K(11), L(12), M(13), N(14), O(15) [no match]\n- O(15) -> P(16) at position 4. Between O(pos 2) and P(pos 4) is 'S' (1 letter); in alphabet O and P are consecutive (0 letters). Not a match.\n- S(19) -> T(20) at position 6. Between S(pos 3) and T(pos 6) are P, I (2 letters); in alphabet S and T are adjacent. Not a match.\n- P(16) -> Q, R, S, T(20) at position 6! In alphabet: P, Q, R, S, T (3 letters between: Q, R, S); in word between P(pos 4) and T(pos 6) is only 'I' (1 letter). Not a match.\n- I(9) -> J, K, L(12) at position 8! In alphabet between I and L are J, K (2 letters); in word between I(pos 5) and L(pos 8) are T, A (2 letters: T, A). Match found: (I, L)!\nTotal = 1 pair.",
+                sH: "बाएँ से दाएँ देखने पर:\nI (क्रमांक 9) और L (क्रमांक 12) के बीच शब्द में 2 अक्षर (T, A) हैं और वर्णमाला में भी 2 अक्षर (J, K) होते हैं। अतः केवल 1 युग्म (I-L) है।"
+            },
+            {
+                e: "How many such pairs of letters are there in the word ‘ALLITERATIVE’, each of which has exactly three letters between them in the word as also in the English alphabet?",
+                h: "‘ALLITERATIVE’ शब्द में ऐसे कितने अक्षरों के युग्म हैं, जिनके बीच शब्द में ठीक तीन अक्षर हैं और अंग्रेजी वर्णमाला में भी उनके बीच तीन अक्षर हैं?",
+                oEn: ["One / एक", "Two / दो", "Three / तीन", "None / कोई नहीं"],
+                oHi: ["One / एक", "Two / दो", "Three / तीन", "None / कोई नहीं"],
+                a: 2,
+                sE: "Looking for letter pairs with a distance of 4 in positions (exactly 3 letters between them in word) and alphabetical difference of 4 (|pos1 - pos2| = 4):\nLetters in ALLITERATIVE (12 letters):\n1:A, 2:L, 3:L, 4:I, 5:T, 6:E, 7:R, 8:A, 9:T, 10:I, 11:V, 12:E\nPairs with gap of 3 letters (index difference = 4):\n- pos 1 (A=1) and pos 5 (T=20) -> diff 19 != 4\n- pos 2 (L=12) and pos 6 (E=5) -> diff = 7 != 4\n- pos 3 (L=12) and pos 7 (R=18) -> diff = 6 != 4\n- pos 4 (I=9) and pos 8 (A=1) -> diff = 8 != 4\n- pos 5 (T=20) and pos 9 (T=20) -> diff = 0 != 4\n- pos 6 (E=5) and pos 10 (I=9) -> diff = 4! E (5) and I (9) have exactly 3 letters (F, G, H) between them in the alphabet! Pair 1: (E, I) at indices (6, 10).\nChecking backward or other occurrences yields a total of 3 matching pairs.",
+                sH: "‘ALLITERATIVE’ में ठीक 3 अक्षरों के अंतर वाले युग्मों की जाँच करने पर कुल 3 ऐसे युग्म प्राप्त होते हैं।"
+            },
+            {
+                e: "Select the option that indicates the correct arrangement of the given words in the order in which they appear in an English dictionary:\n1. Substantial\n2. Substitute\n3. Subsequent\n4. Substandard\n5. Subordinate",
+                h: "उस विकल्प का चयन करें जो अंग्रेजी शब्दकोश में दिए गए शब्दों के सही क्रम को दर्शाता है:\n1. Substantial\n2. Substitute\n3. Subsequent\n4. Substandard\n5. Subordinate",
+                oEn: ["4, 1, 5, 3, 2", "5, 4, 1, 2, 3", "4, 1, 3, 2, 5", "5, 3, 4, 1, 2"],
+                oHi: ["4, 1, 5, 3, 2", "5, 4, 1, 2, 3", "4, 1, 3, 2, 5", "5, 3, 4, 1, 2"],
+                a: 3,
+                sE: "Alphabetical sequence:\n1. Subordinate (S-u-b-o...) -> 5\n2. Subsequent (S-u-b-s-e...) -> 3\n3. Substandard (S-u-b-s-t-a-n-d...) -> 4\n4. Substantial (S-u-b-s-t-a-n-t...) -> 1\n5. Substitute (S-u-b-s-t-i...) -> 2\nCorrect order: 5, 3, 4, 1, 2.",
+                sH: "शब्दकोश का क्रम:\n5. Subordinate\n3. Subsequent\n4. Substandard\n1. Substantial\n2. Substitute\nसही क्रम: 5, 3, 4, 1, 2।"
+            },
+            {
+                e: "How many such pairs of letters are there in the word ‘MONKEY’, each of which has as many letters between them as in the English alphabet?",
+                h: "शब्द ‘MONKEY’ में अक्षरों के ऐसे कितने युग्म हैं, जिनमें से प्रत्येक के बीच उतने ही अक्षर हैं जितने कि अंग्रेजी वर्णमाला में होते हैं?",
+                oEn: ["One / एक", "Two / दो", "Three / तीन", "None / कोई नहीं"],
+                oHi: ["One / एक", "Two / दो", "Three / तीन", "None / कोई नहीं"],
+                a: 0,
+                sE: "Word: M(13) O(15) N(14) K(11) E(5) Y(25)\n- M(13) and N(14): in word between M and N is 'O' (1 letter); in alphabet M and N are adjacent (0 letters).\n- O(15) and N(14): adjacent in word; adjacent in alphabet (N, O). Pair: (O, N) [backward]!\nChecking all other pairs (M-K, M-E, M-Y, O-K, O-E, O-Y, N-K, N-E, N-Y, K-E, K-Y, E-Y) yields no other match.\nTotal = 1 pair.",
+                sH: "‘MONKEY’ में O और N परस्पर संलग्न (adjacent) हैं और वर्णमाला में भी N के बाद O आता है (0 अक्षर बीच में)। अतः केवल 1 युग्म (O-N) है।"
+            },
+            {
+                e: "How many such pairs of letters are there in the word ‘CHARACTERISTIC’, each of which has exactly three letters between them in the word as also in the English alphabet?",
+                h: "‘CHARACTERISTIC’ शब्द में ऐसे कितने अक्षरों के युग्म हैं, जिनके बीच शब्द में ठीक तीन अक्षर हैं और अंग्रेजी वर्णमाला में भी उनके बीच तीन अक्षर हैं?",
+                oEn: ["One / एक", "Two / दो", "Three / तीन", "None / कोई नहीं"],
+                oHi: ["One / एक", "Two / दो", "Three / तीन", "None / कोई नहीं"],
+                a: 3,
+                sE: "Checking pairs with index gap of 4 (3 letters in between) where the alphabetical position difference is also exactly 4:\nWord: C H A R A C T E R I S T I C\nPositions: 1:C, 2:H, 3:A, 4:R, 5:A, 6:C, 7:T, 8:E, 9:R, 10:I, 11:S, 12:T, 13:I, 14:C\nPairs with distance 4:\n- (C=3, A=1): diff 2 != 4\n- (H=8, C=3): diff 5 != 4\n- (A=1, T=20): diff 19 != 4\n- (R=18, E=5): diff 13 != 4\n- (A=1, R=18): diff 17 != 4\n- (C=3, I=9): diff 6 != 4\n- (T=20, S=19): diff 1 != 4\n- (E=5, T=20): diff 15 != 4\n- (R=18, I=9): diff 9 != 4\n- (I=9, C=3): diff 6 != 4\nNo pair has exactly 3 letters between them in both. Hence, None (0).",
+                sH: "‘CHARACTERISTIC’ में ऐसा कोई भी अक्षर-युग्म नहीं है जिसके बीच शब्द और वर्णमाला दोनों में ठीक 3 अक्षर हों। अतः उत्तर 'None' (कोई नहीं) है।"
+            }
+        ];
+
+        const state = {
+            current: 0,
+            answers: new Array(QUESTIONS.length).fill(null),
+            locked: new Array(QUESTIONS.length).fill(false),
+            mode: 'test',
+            lang: 'en',
+            startTime: null,
+            timerInterval: null,
+            elapsed: 0
+        };
+
+        function $(id) { return document.getElementById(id); }
+
+        function toast(msg) {
+            const t = $('toast');
+            $('toastText').textContent = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        function formatTime(s) {
+            const m = Math.floor(s / 60);
+            return String(m).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+        }
+
+        function startApp(mode) {
+            state.mode = mode;
+            $('startScreen').classList.add('hidden');
+            $('quizApp').classList.remove('hidden');
+            state.startTime = Date.now();
+            state.timerInterval = setInterval(() => {
+                state.elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+                $('timerText').textContent = formatTime(state.elapsed);
+            }, 1000);
+            renderQuestion();
+            buildPalette();
+        }
+
+        function toggleLang() {
+            state.lang = state.lang === 'en' ? 'hi' : 'en';
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const i = state.current;
+            const q = QUESTIONS[i];
+            const isQuiz = state.mode === 'quiz';
+            const locked = state.locked[i];
+            const userAns = state.answers[i];
+            const qTxt = state.lang === 'en' ? q.e : q.h;
+            const opts = state.lang === 'en' ? q.oEn : q.oHi;
+
+            let optsHtml = '';
+            opts.forEach((opt, idx) => {
+                let cls = '', tag = '';
+                if (isQuiz && locked) {
+                    if (idx === q.a) {
+                        cls = 'correct';
+                        tag = '<span class="opt-tag">Correct</span>';
+                    }
+                    if (userAns === idx && idx !== q.a) {
+                        cls = 'wrong';
+                        tag = '<span class="opt-tag">Your Ans</span>';
+                    }
+                } else if (userAns === idx) {
+                    cls = 'selected';
+                }
+                optsHtml += `
+                    <div class="opt ${cls} ${locked ? 'locked' : ''}" onclick="selectOption(${idx})">
+                        <div class="opt-letter">${String.fromCharCode(65 + idx)}</div>
+                        <div class="opt-text">${opt}</div>
+                        ${tag}
+                    </div>
+                `;
+            });
+
+            const solTxt = state.lang === 'en' ? q.sE : q.sH;
+            let solHtml = (isQuiz && locked) ? `
+                <div class="sol-box">
+                    <div class="sol-head"><i class="fas fa-lightbulb"></i> Explanation</div>
+                    <div>${solTxt}</div>
+                </div>
+            ` : '';
+
+            $('quizMain').innerHTML = `
+                <div class="q-card">
+                    <div class="q-top">
+                        <div class="q-num-badge">Question ${i + 1} of ${QUESTIONS.length}</div>
+                        <button class="lang-btn" onclick="toggleLang()">
+                            <i class="fas fa-language"></i> ${state.lang === 'en' ? 'हिन्दी' : 'English'}
+                        </button>
+                    </div>
+                    <div class="q-text">${qTxt}</div>
+                    <div class="opts">${optsHtml}</div>
+                    ${solHtml}
+                </div>
+            `;
+
+            $('prevBtn').disabled = i === 0;
+            $('nextLabel').textContent = i === QUESTIONS.length - 1 ? 'Finish' : 'Next';
+            updatePaletteGrid();
+        }
+
+        function selectOption(idx) {
+            if (state.mode === 'quiz' && state.locked[state.current]) return;
+            state.answers[state.current] = idx;
+            if (state.mode === 'quiz') {
+                state.locked[state.current] = true;
+                if (idx === QUESTIONS[state.current].a) {
+                    toast('Correct! 🎉');
+                } else {
+                    toast('Incorrect');
+                }
+            }
+            renderQuestion();
+        }
+
+        function prevQuestion() {
+            if (state.current > 0) {
+                state.current--;
+                renderQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (state.current < QUESTIONS.length - 1) {
+                state.current++;
+                renderQuestion();
+            } else {
+                openSubmitModal();
+            }
+        }
+
+        function buildPalette() {
+            const grid = $('paletteGrid');
+            grid.innerHTML = '';
+            QUESTIONS.forEach((_, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'pal-btn';
+                btn.id = 'pal-' + i;
+                btn.textContent = i + 1;
+                btn.onclick = () => {
+                    state.current = i;
+                    closePalette();
+                    renderQuestion();
+                };
+                grid.appendChild(btn);
+            });
+            updatePaletteGrid();
+        }
+
+        function updatePaletteGrid() {
+            QUESTIONS.forEach((_, i) => {
+                const btn = $('pal-' + i);
+                if (!btn) return;
+                btn.className = 'pal-btn';
+                if (i === state.current) btn.classList.add('current');
+                if (state.answers[i] !== null) btn.classList.add('answered');
+            });
+        }
+
+        function openPalette() {
+            $('paletteDrawer').classList.add('open');$('paletteOverlay').classList.add('open');
+        }
+
+        function closePalette() {
+            $('paletteDrawer').classList.remove('open');$('paletteOverlay').classList.remove('open');
+        }
+
+        function openSubmitModal() {
+            const ans = state.answers.filter(a => a !== null).length;
+            $('modalAttempted').textContent = ans;
+            $('modalUnattempted').textContent = QUESTIONS.length - ans;
+            $('submitModal').classList.add('open');
+        }
+
+        function closeSubmitModal() {
+            $('submitModal').classList.remove('open');
+        }
+
+        function confirmSubmit() {
+            closeSubmitModal();
+            if (state.timerInterval) clearInterval(state.timerInterval);
+            let correct = 0, wrong = 0;
+            state.answers.forEach((ans, i) => {
+                if (ans !== null) {
+                    if (ans === QUESTIONS[i].a) correct++;
+                    else wrong++;
+                }
+            });
+            $('resultsInner').innerHTML = `
+                <h2>Test Completed!</h2>
+                <p style="color:var(--text-muted);margin:8px 0;">Total Time: ${formatTime(state.elapsed)}</p>
+                <div class="res-score-card">
+                    <div class="res-score-val">${correct} / ${QUESTIONS.length}</div>
+                    <div>Score</div>
+                </div>
+                <div class="res-grid">
+                    <div class="res-item"><div class="res-item-val" style="color:var(--green)">${correct}</div><div>Correct</div></div>
+                    <div class="res-item"><div class="res-item-val" style="color:var(--red)">${wrong}</div><div>Wrong</div></div>
+                </div>
+                <button class="modal-btn confirm" onclick="location.reload()">Re-attempt</button>
+            `;
+            $('resultsScreen').classList.add('open');
+        }
+    </script>
+</body>
+</html>
